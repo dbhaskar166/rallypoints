@@ -1,4 +1,4 @@
-import { ClubData, UserProfile, UserWallet } from '../types';
+import { ClubData, Tournament, UserProfile, UserWallet } from '../types';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType, testFirestoreConnection } from './firebase';
 
@@ -439,26 +439,76 @@ export const getInitialClubData = (): ClubData => {
 const CLUB_DATA_DOC = 'primary';
 const CLUB_COLLECTION = 'clubData';
 
+/**
+ * Transforms Tournament bracket for Firestore (which rejects nested arrays BracketMatch[][])
+ * by wrapping each round into a map object: { matches: BracketMatch[] }
+ */
+export function sanitizeClubDataForFirestore(data: ClubData): any {
+  return {
+    ...data,
+    tournaments: (data.tournaments || []).map(t => {
+      if (!t.bracket || !t.bracket.rounds) return t;
+      return {
+        ...t,
+        bracket: {
+          ...t.bracket,
+          rounds: t.bracket.rounds.map(round => {
+            if (Array.isArray(round)) {
+              return { matches: round };
+            }
+            return round;
+          }),
+        },
+      };
+    }),
+  };
+}
+
+/**
+ * Reconstructs 2D BracketMatch[][] from Firestore format: { matches: BracketMatch[] }
+ */
+export function parseClubDataFromFirestore(data: any): ClubData {
+  const initial = getInitialClubData();
+  if (!data) return initial;
+
+  const rawTournaments = data.tournaments && data.tournaments.length > 0 ? data.tournaments : initial.tournaments;
+  const tournaments: Tournament[] = rawTournaments.map((t: any) => {
+    if (!t.bracket || !t.bracket.rounds) return t as Tournament;
+    return {
+      ...t,
+      bracket: {
+        ...t.bracket,
+        rounds: (t.bracket.rounds || []).map((r: any) => {
+          if (Array.isArray(r)) return r;
+          if (r && Array.isArray(r.matches)) return r.matches;
+          return [];
+        }),
+      },
+    } as Tournament;
+  });
+
+  return {
+    tournaments,
+    bookings: data.bookings && data.bookings.length > 0 ? data.bookings : initial.bookings,
+    matches: data.matches && Object.keys(data.matches).length > 0 ? data.matches : initial.matches,
+    playerPhotos: data.playerPhotos && Object.keys(data.playerPhotos).length > 0 ? data.playerPhotos : initial.playerPhotos,
+  };
+}
+
 export async function fetchClubData(): Promise<ClubData> {
   const initial = getInitialClubData();
   try {
     const docRef = doc(db, CLUB_COLLECTION, CLUB_DATA_DOC);
     const snap = await getDoc(docRef);
     if (snap.exists()) {
-      const data = snap.data() as ClubData;
-      const merged: ClubData = {
-        tournaments: data.tournaments && data.tournaments.length > 0 ? data.tournaments : initial.tournaments,
-        bookings: data.bookings && data.bookings.length > 0 ? data.bookings : initial.bookings,
-        matches: data.matches && Object.keys(data.matches).length > 0 ? data.matches : initial.matches,
-        playerPhotos: data.playerPhotos && Object.keys(data.playerPhotos).length > 0 ? data.playerPhotos : initial.playerPhotos,
-      };
+      const parsed = parseClubDataFromFirestore(snap.data());
       if (typeof window !== 'undefined' && window.storage) {
-        window.storage.set('club-data', JSON.stringify(merged), true).catch(() => {});
+        window.storage.set('club-data', JSON.stringify(parsed), true).catch(() => {});
       }
-      return merged;
+      return parsed;
     } else {
-      // Document does not exist in Firestore yet, initialize it
-      await setDoc(docRef, initial);
+      // Document does not exist in Firestore yet, initialize it with sanitized data
+      await setDoc(docRef, sanitizeClubDataForFirestore(initial));
       if (typeof window !== 'undefined' && window.storage) {
         window.storage.set('club-data', JSON.stringify(initial), true).catch(() => {});
       }
@@ -490,10 +540,11 @@ export async function saveClubData(data: ClubData): Promise<void> {
     window.storage.set('club-data', JSON.stringify(data), true).catch(() => {});
   }
 
-  // Persist to Cloud Firestore database
+  // Persist to Cloud Firestore database with nested-array prevention
   try {
     const docRef = doc(db, CLUB_COLLECTION, CLUB_DATA_DOC);
-    await setDoc(docRef, data);
+    const sanitized = sanitizeClubDataForFirestore(data);
+    await setDoc(docRef, sanitized);
   } catch (error) {
     console.error('Failed to persist club data to Firestore:', error);
   }
@@ -509,13 +560,8 @@ export function subscribeToClubData(callback: (data: ClubData) => void): () => v
       docRef,
       snapshot => {
         if (snapshot.exists()) {
-          const d = snapshot.data() as ClubData;
-          callback({
-            tournaments: d.tournaments || [],
-            bookings: d.bookings || [],
-            matches: d.matches || {},
-            playerPhotos: d.playerPhotos || {},
-          });
+          const parsed = parseClubDataFromFirestore(snapshot.data());
+          callback(parsed);
         }
       },
       error => {
