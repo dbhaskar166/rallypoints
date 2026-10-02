@@ -2,5 +2,7 @@
   "name": "RallyPoint Dark — Professional Badminton Club & Scoring App",
   "description": "A sleek, minimalist badminton club app with refined dark mode aesthetics, tournaments, court bookings, BWF doubles/singles live scoring, and wallet.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
