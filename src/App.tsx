@@ -22,7 +22,9 @@ import {
   saveUserWallet,
   generateId,
   cloneData,
+  subscribeToClubData,
 } from './utils/storage';
+import { testFirestoreConnection } from './utils/firebase';
 import {
   createTeam,
   generateBracket,
@@ -68,8 +70,10 @@ export default function App() {
   // Avoid race conditions when saving
   const saveCounterRef = useRef(0);
 
-  // Initial load
+  // Initial load & Firestore real-time listener
   useEffect(() => {
+    testFirestoreConnection();
+
     (async () => {
       const p = await fetchUserProfile();
       const w = await fetchUserWallet();
@@ -84,6 +88,15 @@ export default function App() {
         setShowOnboarding(true);
       }
     })();
+
+    // Live Cloud Firestore real-time synchronization
+    const unsubscribe = subscribeToClubData(fresh => {
+      if (saveCounterRef.current === 0) {
+        setClub(fresh);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Periodic polling for shared club synchronization

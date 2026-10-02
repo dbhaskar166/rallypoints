@@ -1,4 +1,6 @@
 import { ClubData, UserProfile, UserWallet } from '../types';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType, testFirestoreConnection } from './firebase';
 
 declare global {
   interface Window {
@@ -434,35 +436,95 @@ export const getInitialClubData = (): ClubData => {
   };
 };
 
+const CLUB_DATA_DOC = 'primary';
+const CLUB_COLLECTION = 'clubData';
+
 export async function fetchClubData(): Promise<ClubData> {
-  if (typeof window === 'undefined' || !window.storage) return getInitialClubData();
+  const initial = getInitialClubData();
   try {
-    const res = await window.storage.get('club-data', true);
-    if (!res.value) throw new Error('Empty');
-    const parsed = JSON.parse(res.value);
-    return {
-      tournaments: parsed.tournaments || [],
-      bookings: parsed.bookings || [],
-      matches: parsed.matches || {},
-      playerPhotos: parsed.playerPhotos || {},
-    };
-  } catch {
-    const initial = getInitialClubData();
-    try {
-      await window.storage.set('club-data', JSON.stringify(initial), true);
-    } catch (e) {
-      console.error('Failed to set initial club data', e);
+    const docRef = doc(db, CLUB_COLLECTION, CLUB_DATA_DOC);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = snap.data() as ClubData;
+      const merged: ClubData = {
+        tournaments: data.tournaments && data.tournaments.length > 0 ? data.tournaments : initial.tournaments,
+        bookings: data.bookings && data.bookings.length > 0 ? data.bookings : initial.bookings,
+        matches: data.matches && Object.keys(data.matches).length > 0 ? data.matches : initial.matches,
+        playerPhotos: data.playerPhotos && Object.keys(data.playerPhotos).length > 0 ? data.playerPhotos : initial.playerPhotos,
+      };
+      if (typeof window !== 'undefined' && window.storage) {
+        window.storage.set('club-data', JSON.stringify(merged), true).catch(() => {});
+      }
+      return merged;
+    } else {
+      // Document does not exist in Firestore yet, initialize it
+      await setDoc(docRef, initial);
+      if (typeof window !== 'undefined' && window.storage) {
+        window.storage.set('club-data', JSON.stringify(initial), true).catch(() => {});
+      }
+      return initial;
+    }
+  } catch (firestoreError) {
+    console.warn('Firestore fetch failed, checking local storage cache:', firestoreError);
+    if (typeof window !== 'undefined' && window.storage) {
+      try {
+        const res = await window.storage.get('club-data', true);
+        if (res.value) {
+          const parsed = JSON.parse(res.value);
+          return {
+            tournaments: parsed.tournaments || initial.tournaments,
+            bookings: parsed.bookings || initial.bookings,
+            matches: parsed.matches || initial.matches,
+            playerPhotos: parsed.playerPhotos || initial.playerPhotos,
+          };
+        }
+      } catch {}
     }
     return initial;
   }
 }
 
 export async function saveClubData(data: ClubData): Promise<void> {
-  if (typeof window === 'undefined' || !window.storage) return;
+  // Update local fast cache
+  if (typeof window !== 'undefined' && window.storage) {
+    window.storage.set('club-data', JSON.stringify(data), true).catch(() => {});
+  }
+
+  // Persist to Cloud Firestore database
   try {
-    await window.storage.set('club-data', JSON.stringify(data), true);
+    const docRef = doc(db, CLUB_COLLECTION, CLUB_DATA_DOC);
+    await setDoc(docRef, data);
+  } catch (error) {
+    console.error('Failed to persist club data to Firestore:', error);
+  }
+}
+
+/**
+ * Real-time listener for multi-device sync
+ */
+export function subscribeToClubData(callback: (data: ClubData) => void): () => void {
+  try {
+    const docRef = doc(db, CLUB_COLLECTION, CLUB_DATA_DOC);
+    return onSnapshot(
+      docRef,
+      snapshot => {
+        if (snapshot.exists()) {
+          const d = snapshot.data() as ClubData;
+          callback({
+            tournaments: d.tournaments || [],
+            bookings: d.bookings || [],
+            matches: d.matches || {},
+            playerPhotos: d.playerPhotos || {},
+          });
+        }
+      },
+      error => {
+        console.warn('Firestore real-time subscription error:', error);
+      }
+    );
   } catch (e) {
-    console.error('Failed to save club data', e);
+    console.warn('Unable to subscribe to Firestore real-time updates:', e);
+    return () => {};
   }
 }
 

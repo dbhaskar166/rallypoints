@@ -1,0 +1,126 @@
+{
+  "entities": {
+    "Tournament": {
+      "title": "Tournament",
+      "description": "Single-elimination badminton tournament with brackets and entries",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "format": { "type": "string", "enum": ["Singles", "Doubles"] },
+        "date": { "type": "string" },
+        "venue": { "type": "string", "maxLength": 100 },
+        "maxTeams": { "type": "number" },
+        "fee": { "type": "number" },
+        "createdBy": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["open", "live", "completed"] },
+        "championName": { "type": "string" },
+        "entries": { "type": "array" },
+        "bracket": { "type": "object" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "format", "date", "venue", "maxTeams", "status"]
+    },
+    "CourtBooking": {
+      "title": "CourtBooking",
+      "description": "Badminton court reservation and player session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "court": { "type": "string", "maxLength": 100 },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "format": { "type": "string", "enum": ["Singles", "Doubles"] },
+        "slotsTotal": { "type": "number" },
+        "players": { "type": "array" },
+        "createdBy": { "type": "string", "maxLength": 100 },
+        "fee": { "type": "number" },
+        "status": { "type": "string", "enum": ["open", "full", "completed"] },
+        "matchId": { "type": "string" },
+        "winner": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "court", "date", "time", "format", "slotsTotal", "status"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "Live BWF match with scores, sets, rally timeline, and serving rotations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 120 },
+        "source": { "type": "object" },
+        "teamA": { "type": "object" },
+        "teamB": { "type": "object" },
+        "scoreA": { "type": "number" },
+        "scoreB": { "type": "number" },
+        "setsA": { "type": "number" },
+        "setsB": { "type": "number" },
+        "setHistory": { "type": "array" },
+        "currentSet": { "type": "number" },
+        "bestOf": { "type": "number" },
+        "pointsToWin": { "type": "number" },
+        "capPoints": { "type": "number" },
+        "servingTeam": { "type": "string", "enum": ["A", "B"] },
+        "setFinished": { "type": "boolean" },
+        "isDeuce": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["in-progress", "completed"] },
+        "winnerId": { "type": "string" },
+        "commentary": { "type": "string", "maxLength": 500 },
+        "timeline": { "type": "array" },
+        "startTime": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "teamA", "teamB", "scoreA", "scoreB", "status"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Player identity and avatar photo",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 80 },
+        "photoUrl": { "type": "string" },
+        "email": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "PlayerPhoto": {
+      "title": "PlayerPhoto",
+      "description": "Club player avatar mapping",
+      "type": "object",
+      "properties": {
+        "playerName": { "type": "string", "maxLength": 80 },
+        "photoUrl": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["playerName", "photoUrl"]
+    }
+  },
+  "firestore": {
+    "/tournaments/{tournamentId}": {
+      "schema": "Tournament",
+      "description": "Collection of all badminton tournaments"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "CourtBooking",
+      "description": "Collection of all court reservation sessions"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "Collection of live and completed badminton matches"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/playerPhotos/{playerPhotoId}": {
+      "schema": "PlayerPhoto",
+      "description": "Global player photo registry"
+    },
+    "/clubData/{documentId}": {
+      "schema": "ClubDataDoc",
+      "description": "Aggregated club state containing tournaments, bookings, matches, and photos"
+    }
+  }
+}

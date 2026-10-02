@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Club Data Collection
+    match /clubData/{documentId} {
+      allow read: if true;
+      allow write: if isValidId(documentId);
+    }
+
+    // Tournaments Collection
+    match /tournaments/{tournamentId} {
+      allow read: if true;
+      allow create, update: if isValidId(tournamentId) &&
+        incoming().name is string && incoming().name.size() <= 100 &&
+        incoming().venue is string && incoming().venue.size() <= 100;
+      allow delete: if false;
+    }
+
+    // Bookings Collection
+    match /bookings/{bookingId} {
+      allow read: if true;
+      allow create, update: if isValidId(bookingId) &&
+        incoming().court is string && incoming().court.size() <= 100 &&
+        incoming().date is string && incoming().time is string;
+      allow delete: if false;
+    }
+
+    // Matches Collection
+    match /matches/{matchId} {
+      allow read: if true;
+      allow create, update: if isValidId(matchId) &&
+        incoming().title is string && incoming().title.size() <= 150 &&
+        incoming().scoreA is number && incoming().scoreB is number;
+      allow delete: if false;
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isValidId(userId) &&
+        incoming().name is string && incoming().name.size() <= 100;
+    }
+
+    // Player Photos Registry
+    match /playerPhotos/{playerPhotoId} {
+      allow read: if true;
+      allow create, update: if isValidId(playerPhotoId) &&
+        incoming().photoUrl is string && incoming().photoUrl.size() <= 2048;
+      allow delete: if false;
+    }
+
+    // Connection testing
+    match /test/{docId} {
+      allow read: if true;
+    }
+  }
+}
