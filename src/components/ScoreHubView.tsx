@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { ClubData, Match, MatchFormat } from '../types';
-import { Zap, Plus, Play, Trophy, CalendarDays, Clock, CheckCircle2 } from 'lucide-react';
+import { MatchStatsAnalytics } from './MatchStatsAnalytics';
+import { generateClubMatchAnalytics } from '../utils/analytics';
+import {
+  Zap,
+  Plus,
+  Play,
+  Trophy,
+  CalendarDays,
+  Clock,
+  CheckCircle2,
+  BarChart3,
+  Timer,
+  Swords,
+  Shield,
+  Activity,
+} from 'lucide-react';
 
 interface ScoreHubViewProps {
   club: ClubData;
@@ -24,6 +39,7 @@ export const ScoreHubView: React.FC<ScoreHubViewProps> = ({
   onOpenMatch,
   onStartQuickMatch,
 }) => {
+  const [viewMode, setViewMode] = useState<'matches' | 'analytics'>('matches');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState<'All' | 'in-progress' | 'completed'>('All');
 
@@ -50,6 +66,9 @@ export const ScoreHubView: React.FC<ScoreHubViewProps> = ({
     if (filter === 'All') return true;
     return m.status === filter;
   });
+
+  // Summary preview for the top radar banner
+  const quickStats = generateClubMatchAnalytics(matchesList, undefined, club.playerPhotos);
 
   const handleStartQuick = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,148 +109,244 @@ export const ScoreHubView: React.FC<ScoreHubViewProps> = ({
         </button>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-[#0D1017] border border-white/[0.08] rounded-xl self-start w-fit">
-        {(['All', 'in-progress', 'completed'] as const).map(st => (
+      {/* Main Mode Switcher: Matches vs Analytics */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-1 border-b border-white/[0.06]">
+        <div className="flex items-center gap-2 p-1 bg-[#0D1017] border border-white/[0.08] rounded-2xl w-fit">
           <button
-            key={st}
-            onClick={() => setFilter(st)}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all ${
-              filter === st
-                ? 'bg-[#CEFF00]/15 text-[#CEFF00] border border-[#CEFF00]/30 shadow-sm'
-                : 'text-white/50 hover:text-white'
+            onClick={() => setViewMode('matches')}
+            className={`px-4 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 transition-all ${
+              viewMode === 'matches'
+                ? 'bg-[#CEFF00] text-black shadow-[0_0_15px_rgba(206,255,0,0.25)] font-bold'
+                : 'text-white/60 hover:text-white'
             }`}
           >
-            {st === 'All' ? 'All Matches' : st === 'in-progress' ? 'Live Matches' : 'Finished Matches'}
+            <span>🏸 Live & Fixtures</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-black/20">
+              {matchesList.length}
+            </span>
           </button>
-        ))}
-      </div>
 
-      {/* Match Cards List */}
-      {filteredMatches.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-[#0D1017] border border-white/[0.06] text-white/50 space-y-3">
-          <Zap size={32} className="mx-auto text-white/20" />
-          <div className="text-sm font-semibold text-white/70">No matches found</div>
-          <p className="text-xs text-white/40 max-w-sm mx-auto">
-            Start a quick practice match or launch a match from a tournament bracket or booked court.
-          </p>
+          <button
+            onClick={() => setViewMode('analytics')}
+            className={`px-4 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 transition-all ${
+              viewMode === 'analytics'
+                ? 'bg-[#CEFF00] text-black shadow-[0_0_15px_rgba(206,255,0,0.25)] font-bold'
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <BarChart3 size={14} />
+            <span>Match Statistics & Head-to-Head</span>
+            <span className="w-2 h-2 rounded-full bg-[#CEFF00] animate-pulse" />
+          </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredMatches.map(m => {
-            const isLive = m.status === 'in-progress';
-            return (
-              <div
-                key={m.id}
-                onClick={() => onOpenMatch(m.id)}
-                className={`p-5 rounded-2xl bg-[#0D1017] border transition-all cursor-pointer group relative overflow-hidden ${
-                  isLive
-                    ? 'border-[#CEFF00]/30 hover:border-[#CEFF00]/60 shadow-[0_0_20px_rgba(206,255,0,0.05)]'
-                    : 'border-white/[0.08] hover:border-white/[0.2]'
+
+        {viewMode === 'matches' && (
+          /* Filter Tabs for matches */
+          <div className="flex items-center gap-1 p-1 bg-[#0D1017] border border-white/[0.08] rounded-xl self-start sm:self-auto w-fit">
+            {(['All', 'in-progress', 'completed'] as const).map(st => (
+              <button
+                key={st}
+                onClick={() => setFilter(st)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all ${
+                  filter === st
+                    ? 'bg-[#CEFF00]/15 text-[#CEFF00] border border-[#CEFF00]/30 shadow-sm'
+                    : 'text-white/50 hover:text-white'
                 }`}
               >
-                {/* Header status */}
-                <div className="flex items-center justify-between text-xs mb-3">
+                {st === 'All' ? 'All' : st === 'in-progress' ? 'Live' : 'Completed'}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* VIEW MODE 1: ANALYTICS RADAR VIEW */}
+      {viewMode === 'analytics' ? (
+        <MatchStatsAnalytics
+          matches={matchesList}
+          playerPhotos={club.playerPhotos}
+          onOpenMatch={onOpenMatch}
+        />
+      ) : (
+        /* VIEW MODE 2: MATCHES LIST WITH QUICK RADAR PREVIEW */
+        <div className="space-y-6">
+          {/* Quick Radar Snapshot Banner */}
+          <div
+            onClick={() => setViewMode('analytics')}
+            className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#0D1017] via-[#111722] to-[#0D1017] border border-white/[0.08] hover:border-[#CEFF00]/40 transition-all cursor-pointer group shadow-lg"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#CEFF00]/10 border border-[#CEFF00]/30 flex items-center justify-center text-[#CEFF00] shrink-0">
+                  <Activity size={20} />
+                </div>
+                <div>
                   <div className="flex items-center gap-2">
-                    {m.source.type === 'tournament' ? (
-                      <span className="flex items-center gap-1 text-[11px] font-mono text-amber-400">
-                        <Trophy size={12} />
-                        <span>Tournament</span>
-                      </span>
-                    ) : m.source.type === 'booking' ? (
-                      <span className="flex items-center gap-1 text-[11px] font-mono text-cyan-400">
-                        <CalendarDays size={12} />
-                        <span>Court Match</span>
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-[11px] font-mono text-[#CEFF00]">
-                        <Zap size={12} />
-                        <span>Quick Match</span>
-                      </span>
-                    )}
-                    <span className="text-white/30">·</span>
-                    <span className="text-white/50 truncate max-w-[130px]">{m.title}</span>
-                  </div>
-
-                  <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border ${
-                      isLive
-                        ? 'bg-[#CEFF00]/10 text-[#CEFF00] border-[#CEFF00]/30 animate-pulse'
-                        : 'bg-white/5 text-white/40 border-white/10'
-                    }`}
-                  >
-                    {isLive ? `Set ${m.currentSet} · Live` : 'Completed'}
-                  </span>
-                </div>
-
-                {/* Scoreboard line */}
-                <div className="flex items-center justify-between gap-4 py-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`text-sm font-semibold truncate ${
-                          m.servingTeam === 'A' && isLive ? 'text-[#CEFF00]' : 'text-white'
-                        }`}
-                      >
-                        {m.teamA.name}
-                      </span>
-                      {m.servingTeam === 'A' && isLive && <span className="text-xs">🏸</span>}
-                    </div>
-                    <div className="text-[11px] text-white/40 font-mono-numbers">
-                      Sets Won: {m.setsA}
-                    </div>
-                  </div>
-
-                  {/* Big Numerals */}
-                  <div className="flex items-center gap-2 font-display text-2xl font-bold px-3 py-1 rounded-xl bg-black/40 border border-white/[0.08] font-mono-numbers">
-                    <span className={m.servingTeam === 'A' && isLive ? 'text-[#CEFF00]' : 'text-white'}>
-                      {m.scoreA}
+                    <span className="text-sm font-bold text-white group-hover:text-[#CEFF00] transition-colors">
+                      Live Performance Radar & Head-to-Head
                     </span>
-                    <span className="text-white/30 text-lg">:</span>
-                    <span className={m.servingTeam === 'B' && isLive ? 'text-[#CEFF00]' : 'text-white'}>
-                      {m.scoreB}
+                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-[#CEFF00]/10 text-[#CEFF00] border border-[#CEFF00]/20 font-bold">
+                      Analytics Active
                     </span>
                   </div>
-
-                  <div className="flex-1 min-w-0 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      {m.servingTeam === 'B' && isLive && <span className="text-xs">🏸</span>}
-                      <span
-                        className={`text-sm font-semibold truncate ${
-                          m.servingTeam === 'B' && isLive ? 'text-[#CEFF00]' : 'text-white'
-                        }`}
-                      >
-                        {m.teamB.name}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-white/40 font-mono-numbers">
-                      Sets Won: {m.setsB}
-                    </div>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-white/50 mt-1 font-mono">
+                    <span className="flex items-center gap-1.5">
+                      <Timer size={13} className="text-[#CEFF00]" />
+                      <span>Avg Rally: <strong className="text-white font-semibold">{quickStats.avgRallySeconds}s</strong></span>
+                    </span>
+                    <span className="hidden sm:inline text-white/20">·</span>
+                    <span className="flex items-center gap-1.5">
+                      <Zap size={13} className="text-[#CEFF00]" />
+                      <span>Serve Hold: <strong className="text-[#CEFF00] font-semibold">{quickStats.servePct}%</strong></span>
+                    </span>
+                    <span className="hidden sm:inline text-white/20">·</span>
+                    <span className="flex items-center gap-1.5">
+                      <Shield size={13} className="text-cyan-400" />
+                      <span>Break Rate: <strong className="text-cyan-400 font-semibold">{quickStats.receiverPct}%</strong></span>
+                    </span>
+                    <span className="hidden sm:inline text-white/20">·</span>
+                    <span className="flex items-center gap-1.5">
+                      <Swords size={13} className="text-purple-300" />
+                      <span>Rivalries: <strong className="text-white font-semibold">{quickStats.rivalries.length} Pairings</strong></span>
+                    </span>
                   </div>
-                </div>
-
-                {/* Past Sets Strip */}
-                {m.setHistory.length > 0 && (
-                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/[0.05] text-[11px] text-white/50 font-mono-numbers">
-                    <span>Set History:</span>
-                    {m.setHistory.map((s, idx) => (
-                      <span key={idx} className="px-1.5 py-0.5 rounded bg-white/[0.04] text-white/70">
-                        {s.a}–{s.b}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Footer commentary */}
-                <div className="mt-3 pt-2.5 border-t border-white/[0.06] text-[11px] text-white/60 truncate flex items-center justify-between">
-                  <span className="truncate">{m.commentary}</span>
-                  <span className="text-[#CEFF00] font-semibold text-xs shrink-0 ml-2 group-hover:translate-x-0.5 transition-transform">
-                    {isLive ? 'Score Rally →' : 'View Stats →'}
-                  </span>
                 </div>
               </div>
-            );
-          })}
+
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#CEFF00] group-hover:translate-x-0.5 transition-transform self-end md:self-auto shrink-0">
+                <span>Explore Full Statistics</span>
+                <span>→</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Match Cards List */}
+          {filteredMatches.length === 0 ? (
+            <div className="p-12 text-center rounded-3xl bg-[#0D1017] border border-white/[0.06] text-white/50 space-y-3">
+              <Zap size={32} className="mx-auto text-white/20" />
+              <div className="text-sm font-semibold text-white/70">No matches found</div>
+              <p className="text-xs text-white/40 max-w-sm mx-auto">
+                Start a quick practice match or launch a match from a tournament bracket or booked court.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredMatches.map(m => {
+                const isLive = m.status === 'in-progress';
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => onOpenMatch(m.id)}
+                    className={`p-5 rounded-2xl bg-[#0D1017] border transition-all cursor-pointer group relative overflow-hidden ${
+                      isLive
+                        ? 'border-[#CEFF00]/30 hover:border-[#CEFF00]/60 shadow-[0_0_20px_rgba(206,255,0,0.05)]'
+                        : 'border-white/[0.08] hover:border-white/[0.2]'
+                    }`}
+                  >
+                    {/* Header status */}
+                    <div className="flex items-center justify-between text-xs mb-3">
+                      <div className="flex items-center gap-2">
+                        {m.source.type === 'tournament' ? (
+                          <span className="flex items-center gap-1 text-[11px] font-mono text-amber-400">
+                            <Trophy size={12} />
+                            <span>Tournament</span>
+                          </span>
+                        ) : m.source.type === 'booking' ? (
+                          <span className="flex items-center gap-1 text-[11px] font-mono text-cyan-400">
+                            <CalendarDays size={12} />
+                            <span>Court Match</span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[11px] font-mono text-[#CEFF00]">
+                            <Zap size={12} />
+                            <span>Quick Match</span>
+                          </span>
+                        )}
+                        <span className="text-white/30">·</span>
+                        <span className="text-white/50 truncate max-w-[130px]">{m.title}</span>
+                      </div>
+
+                      <span
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border ${
+                          isLive
+                            ? 'bg-[#CEFF00]/10 text-[#CEFF00] border-[#CEFF00]/30 animate-pulse'
+                            : 'bg-white/5 text-white/40 border-white/10'
+                        }`}
+                      >
+                        {isLive ? `Set ${m.currentSet} · Live` : 'Completed'}
+                      </span>
+                    </div>
+
+                    {/* Scoreboard line */}
+                    <div className="flex items-center justify-between gap-4 py-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`text-sm font-semibold truncate ${
+                              m.servingTeam === 'A' && isLive ? 'text-[#CEFF00]' : 'text-white'
+                            }`}
+                          >
+                            {m.teamA.name}
+                          </span>
+                          {m.servingTeam === 'A' && isLive && <span className="text-xs">🏸</span>}
+                        </div>
+                        <div className="text-[11px] text-white/40 font-mono-numbers">
+                          Sets Won: {m.setsA}
+                        </div>
+                      </div>
+
+                      {/* Big Numerals */}
+                      <div className="flex items-center gap-2 font-display text-2xl font-bold px-3 py-1 rounded-xl bg-black/40 border border-white/[0.08] font-mono-numbers">
+                        <span className={m.servingTeam === 'A' && isLive ? 'text-[#CEFF00]' : 'text-white'}>
+                          {m.scoreA}
+                        </span>
+                        <span className="text-white/30 text-lg">:</span>
+                        <span className={m.servingTeam === 'B' && isLive ? 'text-[#CEFF00]' : 'text-white'}>
+                          {m.scoreB}
+                        </span>
+                      </div>
+
+                      <div className="flex-1 min-w-0 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {m.servingTeam === 'B' && isLive && <span className="text-xs">🏸</span>}
+                          <span
+                            className={`text-sm font-semibold truncate ${
+                              m.servingTeam === 'B' && isLive ? 'text-[#CEFF00]' : 'text-white'
+                            }`}
+                          >
+                            {m.teamB.name}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-white/40 font-mono-numbers">
+                          Sets Won: {m.setsB}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Past Sets Strip */}
+                    {m.setHistory.length > 0 && (
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/[0.05] text-[11px] text-white/50 font-mono-numbers">
+                        <span>Set History:</span>
+                        {m.setHistory.map((s, idx) => (
+                          <span key={idx} className="px-1.5 py-0.5 rounded bg-white/[0.04] text-white/70">
+                            {s.a}–{s.b}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Footer commentary */}
+                    <div className="mt-3 pt-2.5 border-t border-white/[0.06] text-[11px] text-white/60 truncate flex items-center justify-between">
+                      <span className="truncate">{m.commentary}</span>
+                      <span className="text-[#CEFF00] font-semibold text-xs shrink-0 ml-2 group-hover:translate-x-0.5 transition-transform">
+                        {isLive ? 'Score Rally →' : 'View Stats →'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
