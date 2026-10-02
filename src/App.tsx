@@ -18,6 +18,7 @@ import {
   saveClubData,
   fetchUserProfile,
   saveUserProfile,
+  clearUserProfile,
   fetchUserWallet,
   saveUserWallet,
   generateId,
@@ -45,6 +46,7 @@ import { LiveScoreView } from './components/LiveScoreView';
 import { WalletView } from './components/WalletView';
 import { ProfileModal } from './components/ProfileModal';
 import { OnboardingModal } from './components/OnboardingModal';
+import { PhoneWhatsAppLoginModal } from './components/PhoneWhatsAppLoginModal';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -66,6 +68,7 @@ export default function App() {
   // Modals
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isPhoneLoginModalOpen, setIsPhoneLoginModalOpen] = useState(false);
 
   // Avoid race conditions when saving
   const saveCounterRef = useRef(0);
@@ -170,8 +173,19 @@ export default function App() {
   };
 
   // Profile save helper
-  const handleSaveProfile = async (name: string, photoUrl: string | null) => {
-    const newProfile: UserProfile = { name, photoUrl };
+  const handleSaveProfile = async (
+    name: string,
+    photoUrl: string | null,
+    phone?: string | null,
+    phoneVerified?: boolean
+  ) => {
+    const newProfile: UserProfile = {
+      name,
+      photoUrl,
+      phone: phone !== undefined ? phone : profile?.phone || null,
+      phoneVerified: phoneVerified !== undefined ? phoneVerified : profile?.phoneVerified || false,
+      authMethod: phoneVerified ? 'whatsapp-otp' : profile?.authMethod || 'standard',
+    };
     setProfile(newProfile);
     setShowOnboarding(false);
     await saveUserProfile(newProfile);
@@ -182,6 +196,17 @@ export default function App() {
       updated.playerPhotos[name.trim().toLowerCase()] = photoUrl;
       await updateClub(updated);
     }
+  };
+
+  const handlePhoneLoginSuccess = async (name: string, phone: string, photoUrl: string | null) => {
+    await handleSaveProfile(name, photoUrl, phone, true);
+    setIsPhoneLoginModalOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await clearUserProfile();
+    setProfile(null);
+    setShowOnboarding(true);
   };
 
   // --- Tournament Handlers ---
@@ -762,6 +787,7 @@ export default function App() {
         profile={profile}
         wallet={wallet}
         onOpenProfile={() => setIsProfileModalOpen(true)}
+        onOpenPhoneLogin={() => setIsPhoneLoginModalOpen(true)}
         liveMatchesCount={liveMatchesCount}
       />
 
@@ -901,10 +927,29 @@ export default function App() {
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         onSave={handleSaveProfile}
+        onOpenPhoneLogin={() => setIsPhoneLoginModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Initial Onboarding Modal */}
-      {showOnboarding && <OnboardingModal onComplete={handleSaveProfile} />}
+      {showOnboarding && (
+        <OnboardingModal
+          onComplete={handleSaveProfile}
+          onOpenPhoneLogin={() => {
+            setShowOnboarding(false);
+            setIsPhoneLoginModalOpen(true);
+          }}
+        />
+      )}
+
+      {/* Phone WhatsApp OTP Login Modal */}
+      <PhoneWhatsAppLoginModal
+        isOpen={isPhoneLoginModalOpen}
+        onClose={() => setIsPhoneLoginModalOpen(false)}
+        currentName={profile?.name}
+        currentPhotoUrl={profile?.photoUrl}
+        onLoginSuccess={handlePhoneLoginSuccess}
+      />
     </div>
   );
 }

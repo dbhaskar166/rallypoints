@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { fileToDataUrl } from '../utils/image';
-import { User, Zap, Sparkles, Upload } from 'lucide-react';
+import { Sparkles, Upload, Zap, MessageCircle } from 'lucide-react';
 
 interface OnboardingModalProps {
   onComplete: (name: string, photoUrl: string | null) => void;
+  onOpenPhoneLogin?: () => void;
 }
 
-export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
+export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete, onOpenPhoneLogin }) => {
   const [name, setName] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -40,36 +41,55 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-md rounded-3xl bg-[#0D1017] border border-white/[0.14] p-7 shadow-2xl relative text-center space-y-5">
+      <div className="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-3xl bg-[#0D1017] border border-white/[0.14] p-6 sm:p-7 shadow-2xl relative text-center space-y-4">
         {/* Glow */}
-        <div className="w-16 h-16 rounded-2xl bg-[#CEFF00]/10 border border-[#CEFF00]/30 flex items-center justify-center text-3xl mx-auto shadow-[0_0_30px_rgba(206,255,0,0.15)]">
+        <div className="w-14 h-14 rounded-2xl bg-[#CEFF00]/10 border border-[#CEFF00]/30 flex items-center justify-center text-3xl mx-auto shadow-[0_0_25px_rgba(206,255,0,0.15)]">
           🏸
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <div className="flex items-center justify-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-[#CEFF00] font-semibold">
             <Sparkles size={13} />
             <span>Welcome to the Club</span>
           </div>
-          <h2 className="text-2xl font-display font-bold text-white tracking-tight">
-            RallyPoint Dark
+          <h2 className="text-xl sm:text-2xl font-display font-bold text-white tracking-tight">
+            RallyPoint Badminton
           </h2>
           <p className="text-xs text-white/60 max-w-xs mx-auto">
-            Set up your player profile to join tournaments, book courts, and track your match history.
+            Sign in with WhatsApp OTP or set up your player display profile to start playing.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-left">
+        {/* WhatsApp Login CTA */}
+        {onOpenPhoneLogin && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={onOpenPhoneLogin}
+              className="w-full py-3 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] active:scale-[0.98] text-black font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(37,211,102,0.25)]"
+            >
+              <MessageCircle size={16} />
+              <span>Login with Phone (WhatsApp OTP)</span>
+            </button>
+
+            <div className="flex items-center gap-3 my-3 text-[10px] font-mono uppercase text-white/30">
+              <div className="flex-1 h-px bg-white/10" />
+              <span>or enter player profile</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-left">
           <div>
-            <label className="block text-xs font-semibold text-white/70 mb-1.5">Your Name</label>
+            <label className="block text-xs font-semibold text-white/70 mb-1.5">Player Name</label>
             <input
               type="text"
               required
-              autoFocus
-              placeholder="e.g. Priya Sharma"
+              placeholder="e.g. Vikram Patel"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#141824] border border-white/[0.1] text-white text-xs placeholder:text-white/30 focus:outline-none focus:border-[#CEFF00]/60"
+              className="w-full px-4 py-2.5 rounded-xl bg-[#141824] border border-white/[0.1] text-white text-xs placeholder:text-white/30 focus:outline-none focus:border-[#CEFF00]/60"
             />
           </div>
 
@@ -92,17 +112,17 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) 
                 className="text-xs text-[#CEFF00] hover:underline flex items-center gap-1 font-semibold"
               >
                 <Upload size={12} />
-                <span>{isUploading ? 'Uploading...' : 'Upload from Device'}</span>
+                <span>{isUploading ? 'Uploading...' : 'Upload File'}</span>
               </button>
             </div>
 
-            <div className="flex items-center gap-2.5 mb-2.5">
+            <div className="flex items-center gap-2.5 mb-2">
               {sampleAvatars.map((src, i) => (
                 <button
                   type="button"
                   key={i}
                   onClick={() => setPhotoUrl(src)}
-                  className={`w-12 h-12 rounded-2xl overflow-hidden border transition-all ${
+                  className={`w-11 h-11 rounded-2xl overflow-hidden border transition-all ${
                     photoUrl === src
                       ? 'border-[#CEFF00] scale-105 ring-2 ring-[#CEFF00]/40'
                       : 'border-white/20 opacity-60 hover:opacity-100'
@@ -113,7 +133,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) 
               ))}
 
               {photoUrl && !sampleAvatars.includes(photoUrl) && (
-                <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-[#CEFF00] ring-2 ring-[#CEFF00]/40">
+                <div className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-[#CEFF00] ring-2 ring-[#CEFF00]/40">
                   <img src={photoUrl} alt="" className="w-full h-full object-cover" />
                 </div>
               )}
@@ -129,15 +149,15 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) 
           </div>
 
           {/* Welcome Notice */}
-          <div className="p-3.5 rounded-2xl bg-[#CEFF00]/5 border border-[#CEFF00]/20 flex items-center gap-2.5 text-xs text-[#CEFF00]">
-            <Zap size={15} className="shrink-0" />
-            <span>Instant club access enabled for all tournaments, court reservations, and live scoring!</span>
+          <div className="p-3 rounded-2xl bg-[#CEFF00]/5 border border-[#CEFF00]/20 flex items-center gap-2 text-xs text-[#CEFF00]">
+            <Zap size={14} className="shrink-0" />
+            <span>Instant access enabled for all tournaments, court bookings, and live scoring.</span>
           </div>
 
           <button
             type="submit"
             disabled={!name.trim()}
-            className="w-full py-3.5 rounded-xl bg-[#CEFF00] hover:bg-[#b8e000] disabled:opacity-40 text-black font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(206,255,0,0.25)]"
+            className="w-full py-3 rounded-xl bg-[#CEFF00] hover:bg-[#b8e000] disabled:opacity-40 text-black font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(206,255,0,0.25)]"
           >
             <span>Enter RallyPoint Arena</span>
           </button>

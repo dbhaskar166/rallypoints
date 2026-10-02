@@ -585,11 +585,41 @@ export async function fetchUserProfile(): Promise<UserProfile | null> {
 }
 
 export async function saveUserProfile(profile: UserProfile): Promise<void> {
+  if (typeof window !== 'undefined' && window.storage) {
+    try {
+      await window.storage.set('profile', JSON.stringify(profile), false);
+    } catch (e) {
+      console.error('Failed to save profile locally', e);
+    }
+  }
+
+  // Also sync verified phone profiles to Firestore
+  if (profile.phone) {
+    try {
+      const cleanId = profile.phone.replace(/\D/g, '');
+      if (cleanId) {
+        const userRef = doc(db, 'users', cleanId);
+        await setDoc(userRef, {
+          name: profile.name,
+          photoUrl: profile.photoUrl || null,
+          phone: profile.phone,
+          phoneVerified: Boolean(profile.phoneVerified),
+          authMethod: profile.authMethod || 'whatsapp-otp',
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    } catch (firestoreErr) {
+      console.warn('Failed to sync user profile to Firestore:', firestoreErr);
+    }
+  }
+}
+
+export async function clearUserProfile(): Promise<void> {
   if (typeof window === 'undefined' || !window.storage) return;
   try {
-    await window.storage.set('profile', JSON.stringify(profile), false);
+    await window.storage.delete('profile', false);
   } catch (e) {
-    console.error('Failed to save profile', e);
+    console.error('Failed to clear profile', e);
   }
 }
 

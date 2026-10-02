@@ -145,6 +145,9 @@ export interface UserWallet {
 export interface UserProfile {
   name: string;
   photoUrl: string | null;
+  phone?: string | null;
+  phoneVerified?: boolean;
+  authMethod?: 'whatsapp-otp' | 'standard';
 }
 
 export interface ClubData {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserProfile, UserWallet } from '../types';
-import { Trophy, CalendarDays, Activity, Wallet, User, Zap } from 'lucide-react';
+import { Trophy, CalendarDays, Activity, User, Zap, MessageCircle, ShieldCheck } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: 'dashboard' | 'tournaments' | 'bookings' | 'scoring' | 'wallet';
@@ -8,6 +8,7 @@ interface NavbarProps {
   profile: UserProfile | null;
   wallet: UserWallet;
   onOpenProfile: () => void;
+  onOpenPhoneLogin: () => void;
   liveMatchesCount: number;
 }
 
@@ -22,8 +23,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   onSelectTab,
   profile,
-  wallet,
   onOpenProfile,
+  onOpenPhoneLogin,
   liveMatchesCount,
 }) => {
   const navItems: NavItem[] = [
@@ -40,10 +41,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/[0.08] bg-[#08090C]/85 backdrop-blur-xl transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3 sm:gap-4">
         {/* Zone 1: Brand Wordmark */}
         <div className="flex items-center gap-3 shrink-0">
           <button
+            type="button"
             onClick={() => onSelectTab('dashboard')}
             className="flex items-center gap-2.5 text-left group focus:outline-none"
           >
@@ -67,6 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             const isActive = activeTab === item.key;
             return (
               <button
+                type="button"
                 key={item.key}
                 onClick={() => onSelectTab(item.key)}
                 className={`px-3.5 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 relative whitespace-nowrap ${
@@ -90,37 +93,62 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
         </nav>
 
-        {/* Zone 3: Profile Button */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Zone 3: WhatsApp Auth & Profile Controls */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {profile?.phoneVerified && profile?.phone ? (
+            <div
+              onClick={onOpenProfile}
+              className="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] text-[11px] font-mono cursor-pointer hover:bg-[#25D366]/20 transition-colors"
+              title="Verified WhatsApp Phone Number"
+            >
+              <MessageCircle size={13} className="shrink-0" />
+              <span className="truncate max-w-[110px] sm:max-w-none">{profile.phone}</span>
+              <ShieldCheck size={12} className="text-[#25D366] shrink-0" />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenPhoneLogin}
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#25D366] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+              title="Sign in with phone number and receive OTP on WhatsApp"
+            >
+              <MessageCircle size={14} className="shrink-0" />
+              <span className="hidden xs:inline">WhatsApp Login</span>
+              <span className="xs:hidden">Login</span>
+            </button>
+          )}
+
           <button
+            type="button"
             onClick={onOpenProfile}
-            className="flex items-center gap-2 p-1 pl-2 pr-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.2] transition-all text-xs text-white group"
+            className="flex items-center gap-2 p-1 pl-1.5 sm:pl-2 pr-2 sm:pr-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.2] transition-all text-xs text-white group"
             title="Player Profile"
           >
             {profile?.photoUrl ? (
               <img
                 src={profile.photoUrl}
                 alt={profile.name}
-                className="w-7 h-7 rounded-lg object-cover border border-white/20"
+                className="w-7 h-7 rounded-lg object-cover border border-white/20 shrink-0"
               />
             ) : (
-              <div className="w-7 h-7 rounded-lg bg-[#181F2C] border border-white/[0.1] text-xs font-bold text-[#CEFF00] flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-[#181F2C] border border-white/[0.1] text-xs font-bold text-[#CEFF00] flex items-center justify-center shrink-0">
                 {profile?.name ? profile.name.charAt(0).toUpperCase() : <User size={13} />}
               </div>
             )}
-            <span className="font-medium text-xs text-white/80 group-hover:text-white truncate max-w-[90px] hidden sm:inline">
+            <span className="font-medium text-xs text-white/80 group-hover:text-white truncate max-w-[85px] sm:max-w-[110px] hidden xs:inline">
               {profile?.name || 'Set Name'}
             </span>
           </button>
         </div>
       </div>
 
-      {/* Mobile Bottom Sub-Nav (Pattern 1 from Mobile Reference) */}
+      {/* Mobile Bottom Sub-Nav */}
       <div className="md:hidden flex items-center justify-around border-t border-white/[0.06] bg-[#0A0C11] py-2 px-2">
         {navItems.map(item => {
           const isActive = activeTab === item.key;
           return (
             <button
+              type="button"
               key={item.key}
               onClick={() => onSelectTab(item.key)}
               className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg text-[10px] font-medium transition-colors relative min-w-[54px] ${
