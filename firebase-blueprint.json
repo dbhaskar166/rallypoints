@@ -95,6 +95,18 @@
         "updatedAt": { "type": "string" }
       },
       "required": ["playerName", "photoUrl"]
+    },
+    "ClubDataDoc": {
+      "title": "ClubDataDoc",
+      "description": "Aggregated club state containing tournaments, bookings, matches, and photos",
+      "type": "object",
+      "properties": {
+        "tournaments": { "type": "array" },
+        "bookings": { "type": "array" },
+        "matches": { "type": "object" },
+        "playerPhotos": { "type": "object" },
+        "updatedAt": { "type": "string" }
+      }
     }
   },
   "firestore": {
