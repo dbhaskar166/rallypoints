@@ -206,9 +206,8 @@ export default function App() {
     const target = club.tournaments.find(t => t.id === activeTournamentId);
     if (!target || target.status !== 'open' || target.entries.length >= target.maxTeams) return;
 
-    if (target.fee > 0) {
-      const success = await deductWallet(target.fee, `Entry Fee · ${target.name}`);
-      if (!success) return;
+    if (target.fee > 0 && wallet.balance >= target.fee) {
+      await deductWallet(target.fee, `Entry Fee · ${target.name}`);
     }
 
     const updated = cloneData(club);
@@ -326,9 +325,8 @@ export default function App() {
     if (!target || target.players.includes(profile.name) || target.players.length >= target.slotsTotal)
       return;
 
-    if (target.fee > 0) {
-      const ok = await deductWallet(target.fee, `Court Fee · ${target.court}`);
-      if (!ok) return;
+    if (target.fee > 0 && wallet.balance >= target.fee) {
+      await deductWallet(target.fee, `Court Fee · ${target.court}`);
     }
 
     const updated = cloneData(club);

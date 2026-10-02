@@ -128,10 +128,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) 
             />
           </div>
 
-          {/* Welcome Bonus Notice */}
+          {/* Welcome Notice */}
           <div className="p-3.5 rounded-2xl bg-[#CEFF00]/5 border border-[#CEFF00]/20 flex items-center gap-2.5 text-xs text-[#CEFF00]">
             <Zap size={15} className="shrink-0" />
-            <span>Includes <strong>₹500</strong> complimentary welcome wallet credit for tournament entries!</span>
+            <span>Instant club access enabled for all tournaments, court reservations, and live scoring!</span>
           </div>
 
           <button

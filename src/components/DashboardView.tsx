@@ -150,13 +150,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
             <div className="text-[11px] font-medium text-white/50 flex items-center justify-between">
-              <span>Your Balance</span>
-              <span className="text-[10px] font-mono text-[#CEFF00]">WAL</span>
+              <span>Club Matches</span>
+              <Zap size={13} className="text-[#CEFF00]" />
             </div>
             <div className="text-2xl font-bold font-mono-numbers text-white mt-1">
-              ₹{wallet.balance.toFixed(0)}
+              {Object.keys(club.matches).length}
             </div>
-            <div className="text-[10px] text-white/40 mt-0.5">Ready for court & tournament entry</div>
+            <div className="text-[10px] text-white/40 mt-0.5">Recorded club encounters</div>
           </div>
         </div>
       </div>

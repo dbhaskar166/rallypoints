@@ -36,7 +36,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       icon: Zap,
       badge: liveMatchesCount > 0 ? liveMatchesCount : null,
     },
-    { key: 'wallet', label: 'Club Wallet', icon: Wallet, badge: null },
   ];
 
   return (
@@ -91,19 +90,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
         </nav>
 
-        {/* Zone 3: Quick Wallet Indicator & Profile Button */}
+        {/* Zone 3: Profile Button */}
         <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={() => onSelectTab('wallet')}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#11151F] border border-white/[0.08] hover:border-white/[0.16] transition-all text-xs font-mono-numbers text-white/90 group"
-            title="Club Wallet Balance"
-          >
-            <Wallet size={13} className="text-[#CEFF00]" />
-            <span className="font-semibold text-white group-hover:text-[#CEFF00] transition-colors">
-              ₹{wallet.balance.toFixed(0)}
-            </span>
-          </button>
-
           <button
             onClick={onOpenProfile}
             className="flex items-center gap-2 p-1 pl-2 pr-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.2] transition-all text-xs text-white group"

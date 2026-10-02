@@ -68,13 +68,6 @@ export const TournamentDetailView: React.FC<TournamentDetailViewProps> = ({
 
   const handleJoinClick = () => {
     if (!partnerName.trim()) return;
-    if (tournament.fee > wallet.balance) {
-      alert(
-        `Insufficient balance in your Club Wallet (₹${wallet.balance} available, ₹${tournament.fee} required). Please top up in Club Wallet.`
-      );
-      onOpenWallet();
-      return;
-    }
     onJoin(partnerName.trim());
   };
 

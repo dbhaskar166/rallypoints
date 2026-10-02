@@ -44,13 +44,6 @@ export const BookingDetailView: React.FC<BookingDetailViewProps> = ({
   const isFull = spotsLeft <= 0;
 
   const handleJoinClick = () => {
-    if (booking.fee > wallet.balance) {
-      alert(
-        `Insufficient balance in your Club Wallet (₹${wallet.balance} available, ₹${booking.fee} required). Please top up in Club Wallet.`
-      );
-      onOpenWallet();
-      return;
-    }
     onJoin();
   };
 
