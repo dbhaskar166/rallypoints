@@ -20,8 +20,6 @@ import {
   History,
   Camera,
   Sliders,
-  Check,
-  Plus,
   Sparkles,
 } from 'lucide-react';
 
@@ -91,7 +89,7 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [match.status, match.setFinished, soundEnabled]);
+  }, [match.status, match.setFinished, soundEnabled, match.scoreA, match.scoreB]);
 
   const handleScorePoint = (team: 'A' | 'B') => {
     if (match.status === 'completed' || match.setFinished) return;
@@ -115,16 +113,12 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
       opponentScore >= match.pointsToWin - 1;
 
     if (willWinMatch) {
-      // Grand championship victory fanfare & haptics
       triggerFeedback('match-win', soundEnabled);
     } else if (willWinSet) {
-      // Exhilarating set won fanfare & crowd cheer swell
       triggerFeedback('game', soundEnabled);
     } else if (willBeDeuce && !match.isDeuce) {
-      // Tension deuce chime
       triggerFeedback('deuce', soundEnabled);
     } else {
-      // Light tactile click for standard point
       triggerFeedback('point', soundEnabled);
     }
 
@@ -175,46 +169,50 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-16">
+    <div className="space-y-4 sm:space-y-6 animate-fadeIn pb-20 sm:pb-16 max-w-5xl mx-auto">
       {/* Top Header Controls */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
+            type="button"
             onClick={onBack}
-            className="w-9 h-9 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-white/[0.2] text-white/70 hover:text-white flex items-center justify-center transition-colors"
+            className="w-9 h-9 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-white/[0.2] text-white/70 hover:text-white flex items-center justify-center transition-colors shrink-0"
+            title="Go back"
           >
             <ArrowLeft size={16} />
           </button>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-xs font-mono text-white/40">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono text-white/40 truncate">
               <span className="truncate">{match.title}</span>
               <span>·</span>
-              <span className="text-white/60">Race to {match.pointsToWin}</span>
+              <span className="text-white/60 shrink-0">Race to {match.pointsToWin}</span>
             </div>
-            <h1 className="text-lg sm:text-xl font-display font-bold text-white tracking-tight truncate">
-              {match.teamA.name} <span className="text-white/40 font-normal">vs</span>{' '}
+            <h1 className="text-sm xs:text-base sm:text-xl font-display font-bold text-white tracking-tight truncate">
+              {match.teamA.name} <span className="text-white/40 font-normal text-xs sm:text-sm">vs</span>{' '}
               {match.teamB.name}
             </h1>
           </div>
         </div>
 
         {/* Stopwatch & Action Buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
+            type="button"
             onClick={() => setShowPlayersModal(true)}
-            className="px-3 py-1.5 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-[#CEFF00]/40 text-xs font-semibold text-white/90 hover:text-[#CEFF00] flex items-center gap-1.5 transition-colors"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-[#CEFF00]/40 text-xs font-semibold text-white/90 hover:text-[#CEFF00] flex items-center gap-1.5 transition-colors"
             title="Add or edit photos of players"
           >
-            <Camera size={14} className="text-[#CEFF00]" />
-            <span className="hidden sm:inline">Player Photos</span>
+            <Camera size={13} className="text-[#CEFF00] shrink-0" />
+            <span className="hidden xs:inline">Photos</span>
           </button>
 
-          <div className="px-3 py-1.5 rounded-xl bg-[#0D1017] border border-white/[0.08] font-mono-numbers text-xs text-white/80 flex items-center gap-1.5">
-            <Clock size={13} className="text-[#CEFF00]" />
+          <div className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#0D1017] border border-white/[0.08] font-mono-numbers text-[11px] sm:text-xs text-white/80 flex items-center gap-1.5">
+            <Clock size={12} className="text-[#CEFF00] shrink-0" />
             <span>{elapsedTime}</span>
           </div>
 
           <button
+            type="button"
             onClick={() => {
               const next = !soundEnabled;
               setSoundEnabled(next);
@@ -222,29 +220,25 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
                 triggerFeedback('point', true);
               }
             }}
-            className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all text-xs font-medium ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all text-xs font-medium ${
               soundEnabled
                 ? 'bg-[#CEFF00]/10 border-[#CEFF00]/30 text-[#CEFF00] shadow-[0_0_12px_rgba(206,255,0,0.1)]'
                 : 'bg-white/[0.02] border-white/[0.05] text-white/40 hover:text-white'
             }`}
-            title={
-              soundEnabled
-                ? 'Haptics & Audio: ON (Light Click on Point, Stadium Cheer on Set Won)'
-                : 'Haptics & Audio: Muted'
-            }
+            title={soundEnabled ? 'Haptics & Audio: ON' : 'Haptics & Audio: Muted'}
           >
-            {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+            {soundEnabled ? <Volume2 size={13} className="shrink-0" /> : <VolumeX size={13} className="shrink-0" />}
             <span className="hidden sm:inline font-mono text-[11px]">
-              {soundEnabled ? 'Haptics & Audio' : 'Muted'}
+              {soundEnabled ? 'Audio' : 'Muted'}
             </span>
           </button>
         </div>
       </div>
 
       {/* Set Tracking Bar & Configurable Number of Sets */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-[#0D1017] border border-white/[0.08]">
-        {/* Set Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto py-0.5">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-2xl bg-[#0D1017] border border-white/[0.08]">
+        {/* Set Pills with responsive touch scroll */}
+        <div className="flex items-center gap-2 overflow-x-auto py-0.5 no-scrollbar [&::-webkit-scrollbar]:hidden">
           {Array.from({ length: match.bestOf }).map((_, idx) => {
             const pastSet = match.setHistory[idx];
             const isCurrent = idx === match.currentSet - 1 && match.status === 'in-progress';
@@ -253,7 +247,7 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
             return (
               <div
                 key={idx}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono-numbers font-semibold flex items-center gap-2 border transition-all whitespace-nowrap ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-mono-numbers font-semibold flex items-center gap-1.5 sm:gap-2 border transition-all whitespace-nowrap shrink-0 ${
                   pastSet
                     ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                     : isCurrent
@@ -275,9 +269,9 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
           })}
         </div>
 
-        {/* Configurable Number of Sets (Default 3, but user can change it) */}
-        <div className="flex items-center gap-2 text-xs self-end sm:self-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/[0.06]">
-          <span className="text-white/40 font-mono text-[11px] flex items-center gap-1">
+        {/* Configurable Number of Sets */}
+        <div className="flex items-center justify-between sm:justify-end gap-2 text-xs shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/[0.06]">
+          <span className="text-white/40 font-mono text-[10px] sm:text-[11px] flex items-center gap-1">
             <Sliders size={12} className="text-[#CEFF00]" />
             <span>Format:</span>
           </span>
@@ -286,13 +280,14 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
             {[1, 3, 5].map(num => (
               <button
                 key={num}
+                type="button"
                 onClick={() => onChangeBestOf(num)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all ${
+                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-mono transition-all ${
                   match.bestOf === num
                     ? 'bg-[#CEFF00] text-black font-bold shadow-sm'
                     : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
                 }`}
-                title={`Play Best of ${num} set${num > 1 ? 's' : ''} (Default: 3)`}
+                title={`Play Best of ${num} set${num > 1 ? 's' : ''}`}
               >
                 Best of {num}
               </button>
@@ -301,50 +296,49 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
         </div>
       </div>
 
-      {/* Live Commentary Banner with Interactive Audio/Haptic Preview */}
-      <div className="p-3.5 rounded-2xl bg-[#0D1017] border border-white/[0.1] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
-        <div className="flex items-center gap-2.5 min-w-0">
+      {/* Live Commentary Banner */}
+      <div className="p-3 sm:p-3.5 rounded-2xl bg-[#0D1017] border border-white/[0.1] flex flex-col xs:flex-row xs:items-center justify-between gap-2 sm:gap-3 shadow-md">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="w-2 h-2 rounded-full bg-[#CEFF00] animate-pulse shrink-0" />
           <p className="text-xs text-white/90 truncate font-medium">{match.commentary}</p>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-mono text-white/40 shrink-0 self-end sm:self-auto">
-          <span className="hidden md:inline">Preview:</span>
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/40 shrink-0 self-end xs:self-auto">
           <button
             type="button"
             onClick={() => triggerFeedback('point', true)}
-            className="px-2 py-0.5 rounded bg-white/[0.04] hover:bg-[#CEFF00]/10 hover:text-[#CEFF00] text-white/60 transition-colors flex items-center gap-1 active:scale-95"
-            title="Preview light racquet point click and tactile haptic pulse"
+            className="px-2 py-0.5 rounded bg-white/[0.04] hover:bg-[#CEFF00]/10 hover:text-[#CEFF00] text-white/60 transition-colors flex items-center gap-1 active:scale-95 text-[10px]"
+            title="Preview racquet hit audio and haptic feedback"
           >
             <span>Shuttle Click</span>
           </button>
           <button
             type="button"
             onClick={() => triggerFeedback('game', true)}
-            className="px-2 py-0.5 rounded bg-white/[0.04] hover:bg-[#CEFF00]/10 hover:text-[#CEFF00] text-white/60 transition-colors flex items-center gap-1 active:scale-95"
-            title="Preview celebratory game set fanfare and stadium cheer"
+            className="px-2 py-0.5 rounded bg-white/[0.04] hover:bg-[#CEFF00]/10 hover:text-[#CEFF00] text-white/60 transition-colors flex items-center gap-1 active:scale-95 text-[10px]"
+            title="Preview stadium victory cheer"
           >
-            <Sparkles size={11} className="text-[#CEFF00]" />
-            <span>Stadium Cheer</span>
+            <Sparkles size={10} className="text-[#CEFF00]" />
+            <span>Cheer</span>
           </button>
         </div>
       </div>
 
       {/* Deuce Indicator */}
       {match.isDeuce && match.status === 'in-progress' && !match.setFinished && (
-        <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-center text-xs font-semibold animate-pulse flex items-center justify-center gap-2">
+        <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-center text-xs font-semibold animate-pulse flex items-center justify-center gap-2">
           <span>🔔</span>
-          <span>DEUCE IN EFFECT · 2-point clear advantage required (Capped at {match.capPoints})</span>
+          <span>DEUCE · 2-point lead required to win (Capped at {match.capPoints})</span>
         </div>
       )}
 
       {/* Set Won Callout */}
       {match.setFinished && match.status !== 'completed' && (
-        <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-950/40 via-[#0D1017] to-[#0A0C11] border border-emerald-500/40 text-center space-y-3 shadow-xl">
+        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-950/40 via-[#0D1017] to-[#0A0C11] border border-emerald-500/40 text-center space-y-2.5 sm:space-y-3 shadow-xl">
           <div className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold flex items-center justify-center gap-1.5">
             <Sparkles size={14} className="text-emerald-400 animate-spin" />
             <span>Set {match.currentSet} Concluded</span>
           </div>
-          <h2 className="text-xl font-display font-bold text-white">
+          <h2 className="text-lg sm:text-xl font-display font-bold text-white">
             {match.setsA > match.setsB ? match.teamA.name : match.teamB.name} wins Set {match.currentSet}!
           </h2>
           <p className="text-xs text-white/60">
@@ -352,11 +346,12 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
           </p>
 
           <button
+            type="button"
             onClick={() => {
               triggerFeedback('point', soundEnabled);
               onNextSet();
             }}
-            className="px-6 py-3 rounded-xl bg-[#CEFF00] text-black font-semibold text-xs flex items-center justify-center gap-2 hover:bg-[#b8e000] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(206,255,0,0.2)] mx-auto"
+            className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-[#CEFF00] text-black font-semibold text-xs flex items-center justify-center gap-2 hover:bg-[#b8e000] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(206,255,0,0.2)] mx-auto"
           >
             <span>Proceed to Set {match.currentSet + 1}</span>
             <ChevronRight size={15} />
@@ -366,22 +361,22 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
 
       {/* Match Completed Banner */}
       {match.status === 'completed' && championTeam && (
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-amber-500/15 via-[#0D1017] to-[#0A0C11] border border-amber-500/40 text-center space-y-3 shadow-2xl">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mx-auto">
-            <Crown size={28} />
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-amber-500/15 via-[#0D1017] to-[#0A0C11] border border-amber-500/40 text-center space-y-2.5 sm:space-y-3 shadow-2xl">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mx-auto">
+            <Crown size={26} />
           </div>
           <div className="text-xs font-mono uppercase tracking-wider text-amber-400 font-bold">
             Official Match Winner
           </div>
-          <h2 className="text-2xl font-display font-bold text-white">{championTeam.name}</h2>
-          <div className="text-sm text-white/70 font-mono-numbers">
+          <h2 className="text-xl sm:text-2xl font-display font-bold text-white">{championTeam.name}</h2>
+          <div className="text-xs sm:text-sm text-white/70 font-mono-numbers">
             Sets: {match.setsA} – {match.setsB} (Best of {match.bestOf})
           </div>
         </div>
       )}
 
       {/* Big Score Touch Targets Matrix */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
         {/* Team A Score Target */}
         <ScoreTargetCard
           team={match.teamA}
@@ -393,7 +388,6 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
           activeReceiverName={activeReceiver}
           disabled={match.status === 'completed' || match.setFinished}
           onScore={() => handleScorePoint('A')}
-          teamColor="#10B981"
           playerPhotos={playerPhotos}
           onEditPlayerPhoto={name => setEditingPlayerForPhoto(name)}
         />
@@ -409,7 +403,6 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
           activeReceiverName={activeReceiver}
           disabled={match.status === 'completed' || match.setFinished}
           onScore={() => handleScorePoint('B')}
-          teamColor="#38BDF8"
           playerPhotos={playerPhotos}
           onEditPlayerPhoto={name => setEditingPlayerForPhoto(name)}
         />
@@ -428,59 +421,59 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
         onEditPlayerPhoto={name => setEditingPlayerForPhoto(name)}
       />
 
-      {/* Bottom Action Strip: Undo / Reset / Timeline / Edit Photos */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/[0.08]">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleUndoPoint}
-            disabled={!match.history || match.history.length === 0}
-            className="px-3.5 py-2 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-white/[0.18] disabled:opacity-30 text-white/80 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all"
-            title="Revert previous point (Ctrl+Z)"
-          >
-            <RotateCcw size={14} />
-            <span>Undo Point</span>
-          </button>
+      {/* Bottom Action Strip: Undo / Reset / Manage Photos / Timeline */}
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-between gap-2 sm:gap-3 pt-3 border-t border-white/[0.08]">
+        <button
+          type="button"
+          onClick={handleUndoPoint}
+          disabled={!match.history || match.history.length === 0}
+          className="w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-white/[0.18] disabled:opacity-30 text-white/80 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+          title="Revert previous point (Ctrl+Z)"
+        >
+          <RotateCcw size={14} />
+          <span>Undo Point</span>
+        </button>
 
-          <button
-            onClick={() => {
-              if (window.confirm('Reset this match to Set 1 (0–0)?')) {
-                onReset();
-              }
-            }}
-            className="px-3.5 py-2 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-rose-500/30 text-white/60 hover:text-rose-400 text-xs font-semibold flex items-center gap-1.5 transition-all"
-            title="Reset match back to initial state"
-          >
-            <ListRestart size={14} />
-            <span>Reset</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (window.confirm('Reset this match to Set 1 (0–0)?')) {
+              onReset();
+            }
+          }}
+          className="w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-rose-500/30 text-white/60 hover:text-rose-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+          title="Reset match back to initial state"
+        >
+          <ListRestart size={14} />
+          <span>Reset</span>
+        </button>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowPlayersModal(true)}
-            className="px-3.5 py-2 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-[#CEFF00]/40 text-xs font-semibold text-white/80 hover:text-white flex items-center gap-1.5 transition-all"
-          >
-            <Camera size={14} className="text-[#CEFF00]" />
-            <span>Manage Photos</span>
-          </button>
+        <button
+          type="button"
+          onClick={() => setShowPlayersModal(true)}
+          className="w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-[#0D1017] border border-white/[0.08] hover:border-[#CEFF00]/40 text-xs font-semibold text-white/80 hover:text-white flex items-center justify-center gap-1.5 transition-all"
+        >
+          <Camera size={14} className="text-[#CEFF00]" />
+          <span>Manage Photos</span>
+        </button>
 
-          <button
-            onClick={() => setShowTimeline(v => !v)}
-            className={`px-3.5 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              showTimeline
-                ? 'bg-[#CEFF00]/15 text-[#CEFF00] border-[#CEFF00]/40'
-                : 'bg-[#0D1017] text-white/70 border-white/[0.08] hover:border-white/[0.18]'
-            }`}
-          >
-            <History size={14} />
-            <span>Timeline ({match.timeline.length})</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowTimeline(v => !v)}
+          className={`w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+            showTimeline
+              ? 'bg-[#CEFF00]/15 text-[#CEFF00] border-[#CEFF00]/40'
+              : 'bg-[#0D1017] text-white/70 border-white/[0.08] hover:border-white/[0.18]'
+          }`}
+        >
+          <History size={14} />
+          <span>Timeline ({match.timeline.length})</span>
+        </button>
       </div>
 
       {/* Match Point-by-Point Timeline Drawer */}
       {showTimeline && (
-        <div className="p-5 rounded-3xl bg-[#0D1017] border border-white/[0.08] space-y-3 animate-fadeIn">
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#0D1017] border border-white/[0.08] space-y-3 animate-fadeIn">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-display font-bold uppercase tracking-wider text-white">
               Point-By-Point Match Log
@@ -511,9 +504,9 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
 
       {/* Players & Photos Overview Modal */}
       {showPlayersModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md rounded-3xl bg-[#0D1017] border border-white/[0.14] p-6 shadow-2xl relative space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl bg-[#0D1017] border border-white/[0.14] p-4 sm:p-6 shadow-2xl relative space-y-4">
+            <div className="flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Camera size={18} className="text-[#CEFF00]" />
                 <h3 className="text-base font-display font-bold text-white">
@@ -521,6 +514,7 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setShowPlayersModal(false)}
                 className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/60 hover:text-white flex items-center justify-center transition-colors"
               >
@@ -528,11 +522,11 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
               </button>
             </div>
 
-            <p className="text-xs text-white/50">
-              Upload photos or select avatars for players on the court. Photos will appear in real time across the scoreboard and court diagram.
+            <p className="text-xs text-white/50 shrink-0">
+              Upload photos or select avatars for players on the court. Photos will appear across the scoreboard and court positioner.
             </p>
 
-            <div className="divide-y divide-white/[0.06] space-y-2">
+            <div className="divide-y divide-white/[0.06] space-y-2 overflow-y-auto flex-1 pr-1">
               {matchPlayers.map((player, idx) => {
                 const photo = playerPhotos[player.name.trim().toLowerCase()] || null;
                 return (
@@ -540,8 +534,8 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
                     key={idx}
                     className="pt-2 flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-14 h-14 rounded-2xl bg-[#141824] border-2 border-white/[0.12] overflow-hidden flex items-center justify-center text-lg font-bold text-[#CEFF00] shrink-0 shadow-md">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                      <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-[#141824] border-2 border-white/[0.12] overflow-hidden flex items-center justify-center text-base sm:text-lg font-bold text-[#CEFF00] shrink-0 shadow-md">
                         {photo ? (
                           <img src={photo} alt={player.name} className="w-full h-full object-cover" />
                         ) : (
@@ -549,21 +543,22 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold text-white truncate">
+                        <div className="text-xs sm:text-sm font-semibold text-white truncate">
                           {player.name}
                         </div>
-                        <div className="text-[11px] text-white/50 font-mono mt-0.5">
+                        <div className="text-[10px] sm:text-[11px] text-white/50 font-mono mt-0.5 truncate">
                           Team {player.team} · {player.role}
                         </div>
                       </div>
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => {
                         setShowPlayersModal(false);
                         setEditingPlayerForPhoto(player.name);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors border border-white/[0.08]"
+                      className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors border border-white/[0.08] shrink-0"
                     >
                       <Camera size={13} className="text-[#CEFF00]" />
                       <span>{photo ? 'Change' : 'Add Photo'}</span>
@@ -573,8 +568,9 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
               })}
             </div>
 
-            <div className="pt-3 border-t border-white/[0.06]">
+            <div className="pt-2 border-t border-white/[0.06] shrink-0">
               <button
+                type="button"
                 onClick={() => setShowPlayersModal(false)}
                 className="w-full py-2.5 rounded-xl bg-[#CEFF00] hover:bg-[#b8e000] text-black text-xs font-bold transition-all shadow-[0_0_15px_rgba(206,255,0,0.2)]"
               >
@@ -609,7 +605,6 @@ interface ScoreTargetCardProps {
   activeReceiverName: string;
   disabled: boolean;
   onScore: () => void;
-  teamColor: string;
   playerPhotos: Record<string, string>;
   onEditPlayerPhoto: (playerName: string) => void;
 }
@@ -635,7 +630,7 @@ const ScoreTargetCard: React.FC<ScoreTargetCardProps> = ({
   return (
     <div
       onClick={disabled ? undefined : onScore}
-      className={`rounded-3xl border p-5 sm:p-7 flex flex-col justify-between text-center select-none transition-all relative overflow-hidden group ${
+      className={`rounded-3xl border p-3 xs:p-4 sm:p-7 flex flex-col justify-between text-center select-none transition-all relative overflow-hidden group ${
         disabled
           ? 'cursor-not-allowed opacity-80'
           : 'cursor-pointer active:scale-[0.98]'
@@ -653,43 +648,43 @@ const ScoreTargetCard: React.FC<ScoreTargetCardProps> = ({
       )}
 
       {/* Header Info */}
-      <div className="space-y-1 relative z-10">
-        <div className="flex items-center justify-center gap-2">
+      <div className="space-y-0.5 sm:space-y-1 relative z-10">
+        <div className="flex items-center justify-center gap-1.5">
           {isServing && (
-            <span className="px-2 py-0.5 rounded-full bg-[#CEFF00]/15 text-[#CEFF00] font-mono text-[10px] font-bold border border-[#CEFF00]/30 flex items-center gap-1">
+            <span className="px-1.5 xs:px-2 py-0.5 rounded-full bg-[#CEFF00]/15 text-[#CEFF00] font-mono text-[9px] xs:text-[10px] font-bold border border-[#CEFF00]/30 flex items-center gap-1">
               <span>🏸</span>
               <span>Serving</span>
             </span>
           )}
           {isWinner && (
-            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold border border-amber-500/40">
+            <span className="px-1.5 xs:px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[9px] xs:text-[10px] font-bold border border-amber-500/40">
               👑 Winner
             </span>
           )}
         </div>
 
         <h3
-          className={`font-semibold text-sm sm:text-base truncate transition-colors ${
+          className={`font-semibold text-xs xs:text-sm sm:text-base truncate transition-colors ${
             isServing ? 'text-[#CEFF00]' : 'text-white'
           }`}
         >
           {team.name}
         </h3>
 
-        <div className="text-[11px] font-mono text-white/50">Sets Won: {setsWon}</div>
+        <div className="text-[10px] sm:text-[11px] font-mono text-white/50">Sets: {setsWon}</div>
       </div>
 
       {/* Massive Score Number Display */}
-      <div className="my-4 sm:my-6 relative z-10">
+      <div className="my-2 xs:my-3 sm:my-6 relative z-10">
         <div
-          className={`font-display text-5xl sm:text-7xl font-bold font-mono-numbers tracking-tight transition-transform group-hover:scale-105 duration-150 ${
+          className={`font-display text-4xl xs:text-5xl sm:text-7xl font-bold font-mono-numbers tracking-tight transition-transform group-hover:scale-105 duration-150 ${
             isServing ? 'text-[#CEFF00]' : 'text-white'
           }`}
         >
           {score}
         </div>
         {!disabled && (
-          <div className="text-[10px] text-white/40 mt-1 uppercase font-mono tracking-widest group-hover:text-white/70 transition-colors">
+          <div className="text-[9px] sm:text-[10px] text-white/40 mt-0.5 sm:mt-1 uppercase font-mono tracking-widest group-hover:text-white/70 transition-colors">
             Tap to Score +1
           </div>
         )}
@@ -697,14 +692,14 @@ const ScoreTargetCard: React.FC<ScoreTargetCardProps> = ({
 
       {/* Doubles Court Position Preview & Quick Photo Triggers */}
       {team.leftPlayer ? (
-        <div className="pt-3 border-t border-white/[0.06] grid grid-cols-2 gap-2 text-left relative z-10">
-          {/* Right Court */}
+        <div className="pt-2 sm:pt-3 border-t border-white/[0.06] flex flex-col gap-1.5 sm:grid sm:grid-cols-2 sm:gap-2 text-left relative z-10">
+          {/* Right Court Player */}
           <div
             onClick={e => {
               e.stopPropagation();
               onEditPlayerPhoto(team.rightPlayer);
             }}
-            className={`p-2.5 rounded-2xl text-[11px] border transition-all cursor-pointer group/pill hover:scale-[1.02] ${
+            className={`p-1.5 xs:p-2 sm:p-2.5 rounded-xl xs:rounded-2xl text-[10px] sm:text-[11px] border transition-all cursor-pointer group/pill hover:scale-[1.02] ${
               isServing && score % 2 === 0
                 ? 'bg-[#CEFF00]/10 border-[#CEFF00]/30 text-[#CEFF00] shadow-[0_0_12px_rgba(206,255,0,0.08)]'
                 : isReceiver && activeReceiverName === team.rightPlayer
@@ -713,29 +708,31 @@ const ScoreTargetCard: React.FC<ScoreTargetCardProps> = ({
             }`}
             title={`Tap to edit photo for ${team.rightPlayer}`}
           >
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-white/40 uppercase text-[9px] font-mono">Right (Even)</span>
-              <Camera size={12} className="opacity-40 group-hover/pill:opacity-100 text-[#CEFF00] transition-opacity" />
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-white/40 uppercase text-[8px] xs:text-[9px] font-mono">Right (Even)</span>
+              <Camera size={11} className="opacity-40 group-hover/pill:opacity-100 text-[#CEFF00] transition-opacity shrink-0" />
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 border border-white/20 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <div className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 border border-white/20 overflow-hidden shrink-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-white shadow-sm">
                 {getPhoto(team.rightPlayer) ? (
                   <img src={getPhoto(team.rightPlayer)!} alt="" className="w-full h-full object-cover" />
                 ) : (
                   team.rightPlayer.charAt(0)
                 )}
               </div>
-              <span className="font-semibold text-xs truncate text-white">{team.rightPlayer}</span>
+              <span className="font-semibold text-[10px] xs:text-[11px] sm:text-xs truncate text-white min-w-0">
+                {team.rightPlayer}
+              </span>
             </div>
           </div>
 
-          {/* Left Court */}
+          {/* Left Court Player */}
           <div
             onClick={e => {
               e.stopPropagation();
               onEditPlayerPhoto(team.leftPlayer!);
             }}
-            className={`p-2.5 rounded-2xl text-[11px] border transition-all cursor-pointer group/pill hover:scale-[1.02] ${
+            className={`p-1.5 xs:p-2 sm:p-2.5 rounded-xl xs:rounded-2xl text-[10px] sm:text-[11px] border transition-all cursor-pointer group/pill hover:scale-[1.02] ${
               isServing && score % 2 !== 0
                 ? 'bg-[#CEFF00]/10 border-[#CEFF00]/30 text-[#CEFF00] shadow-[0_0_12px_rgba(206,255,0,0.08)]'
                 : isReceiver && activeReceiverName === team.leftPlayer
@@ -744,19 +741,21 @@ const ScoreTargetCard: React.FC<ScoreTargetCardProps> = ({
             }`}
             title={`Tap to edit photo for ${team.leftPlayer}`}
           >
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-white/40 uppercase text-[9px] font-mono">Left (Odd)</span>
-              <Camera size={12} className="opacity-40 group-hover/pill:opacity-100 text-[#CEFF00] transition-opacity" />
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-white/40 uppercase text-[8px] xs:text-[9px] font-mono">Left (Odd)</span>
+              <Camera size={11} className="opacity-40 group-hover/pill:opacity-100 text-[#CEFF00] transition-opacity shrink-0" />
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 border border-white/20 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <div className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 border border-white/20 overflow-hidden shrink-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-white shadow-sm">
                 {getPhoto(team.leftPlayer) ? (
                   <img src={getPhoto(team.leftPlayer)!} alt="" className="w-full h-full object-cover" />
                 ) : (
                   team.leftPlayer.charAt(0)
                 )}
               </div>
-              <span className="font-semibold text-xs truncate text-white">{team.leftPlayer}</span>
+              <span className="font-semibold text-[10px] xs:text-[11px] sm:text-xs truncate text-white min-w-0">
+                {team.leftPlayer}
+              </span>
             </div>
           </div>
         </div>
@@ -767,21 +766,24 @@ const ScoreTargetCard: React.FC<ScoreTargetCardProps> = ({
             e.stopPropagation();
             onEditPlayerPhoto(team.rightPlayer || team.name);
           }}
-          className="pt-3 border-t border-white/[0.06] flex items-center justify-center gap-3 text-xs text-white/80 hover:text-white cursor-pointer group/singles relative z-10"
+          className="pt-2 sm:pt-3 border-t border-white/[0.06] flex items-center justify-center gap-2 sm:gap-3 text-xs text-white/80 hover:text-white cursor-pointer group/singles relative z-10"
           title={`Tap to edit photo for ${team.name}`}
         >
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/10 border-2 border-white/20 overflow-hidden flex items-center justify-center text-base font-bold text-[#CEFF00] shrink-0 shadow-md transition-transform group-hover/singles:scale-105">
+          <div className="w-9 h-9 xs:w-11 xs:h-11 sm:w-14 sm:h-14 rounded-2xl bg-white/10 border-2 border-white/20 overflow-hidden flex items-center justify-center text-sm sm:text-base font-bold text-[#CEFF00] shrink-0 shadow-md transition-transform group-hover/singles:scale-105">
             {getPhoto(team.rightPlayer || team.name) ? (
               <img src={getPhoto(team.rightPlayer || team.name)!} alt="" className="w-full h-full object-cover" />
             ) : (
               (team.rightPlayer || team.name).charAt(0)
             )}
           </div>
-          <div className="text-left">
-            <div className="text-xs font-bold text-white">{team.rightPlayer || team.name}</div>
-            <span className="text-[10px] text-[#CEFF00] flex items-center gap-1 font-mono">
-              <Camera size={11} />
-              <span>Tap to change photo</span>
+          <div className="text-left min-w-0">
+            <div className="text-xs sm:text-sm font-bold text-white truncate max-w-[90px] xs:max-w-[130px] sm:max-w-none">
+              {team.rightPlayer || team.name}
+            </div>
+            <span className="text-[9px] sm:text-[10px] text-[#CEFF00] flex items-center gap-1 font-mono">
+              <Camera size={10} />
+              <span className="hidden xs:inline">Change photo</span>
+              <span className="xs:hidden">Photo</span>
             </span>
           </div>
         </div>
