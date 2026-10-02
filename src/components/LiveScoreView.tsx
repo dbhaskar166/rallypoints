@@ -6,8 +6,8 @@ import {
   formatDuration,
   getCurrentServer,
   getCurrentReceiver,
-  playPointChime,
 } from '../utils/badminton';
+import { triggerFeedback } from '../utils/feedback';
 import {
   ArrowLeft,
   RotateCcw,
@@ -22,6 +22,7 @@ import {
   Sliders,
   Check,
   Plus,
+  Sparkles,
 } from 'lucide-react';
 
 interface LiveScoreViewProps {
@@ -94,17 +95,45 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
 
   const handleScorePoint = (team: 'A' | 'B') => {
     if (match.status === 'completed' || match.setFinished) return;
-    if (soundEnabled) {
-      playPointChime('point');
+
+    // Detect if this point will clinch a set or the match
+    const currentScore = team === 'A' ? match.scoreA : match.scoreB;
+    const opponentScore = team === 'A' ? match.scoreB : match.scoreA;
+    const newScore = currentScore + 1;
+
+    const willWinSet =
+      (newScore >= match.pointsToWin && newScore - opponentScore >= 2) ||
+      newScore === match.capPoints;
+
+    const neededSets = Math.ceil(match.bestOf / 2);
+    const setsWon = team === 'A' ? match.setsA : match.setsB;
+    const willWinMatch = willWinSet && setsWon + 1 >= neededSets;
+
+    const willBeDeuce =
+      !willWinSet &&
+      newScore >= match.pointsToWin - 1 &&
+      opponentScore >= match.pointsToWin - 1;
+
+    if (willWinMatch) {
+      // Grand championship victory fanfare & haptics
+      triggerFeedback('match-win', soundEnabled);
+    } else if (willWinSet) {
+      // Exhilarating set won fanfare & crowd cheer swell
+      triggerFeedback('game', soundEnabled);
+    } else if (willBeDeuce && !match.isDeuce) {
+      // Tension deuce chime
+      triggerFeedback('deuce', soundEnabled);
+    } else {
+      // Light tactile click for standard point
+      triggerFeedback('point', soundEnabled);
     }
+
     onPoint(team);
   };
 
   const handleUndoPoint = () => {
     if (!match.history || match.history.length === 0) return;
-    if (soundEnabled) {
-      playPointChime('undo');
-    }
+    triggerFeedback('undo', soundEnabled);
     onUndo();
   };
 
@@ -186,15 +215,28 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
           </div>
 
           <button
-            onClick={() => setSoundEnabled(v => !v)}
-            className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-colors ${
+            onClick={() => {
+              const next = !soundEnabled;
+              setSoundEnabled(next);
+              if (next) {
+                triggerFeedback('point', true);
+              }
+            }}
+            className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all text-xs font-medium ${
               soundEnabled
-                ? 'bg-white/[0.05] border-white/[0.1] text-[#CEFF00]'
-                : 'bg-white/[0.02] border-white/[0.05] text-white/30'
+                ? 'bg-[#CEFF00]/10 border-[#CEFF00]/30 text-[#CEFF00] shadow-[0_0_12px_rgba(206,255,0,0.1)]'
+                : 'bg-white/[0.02] border-white/[0.05] text-white/40 hover:text-white'
             }`}
-            title={soundEnabled ? 'Mute Audio Chimes' : 'Enable Audio Chimes'}
+            title={
+              soundEnabled
+                ? 'Haptics & Audio: ON (Light Click on Point, Stadium Cheer on Set Won)'
+                : 'Haptics & Audio: Muted'
+            }
           >
-            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+            <span className="hidden sm:inline font-mono text-[11px]">
+              {soundEnabled ? 'Haptics & Audio' : 'Muted'}
+            </span>
           </button>
         </div>
       </div>
@@ -259,14 +301,31 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
         </div>
       </div>
 
-      {/* Live Commentary Banner */}
-      <div className="p-3.5 rounded-2xl bg-[#0D1017] border border-white/[0.1] flex items-center justify-between gap-3 shadow-md">
+      {/* Live Commentary Banner with Interactive Audio/Haptic Preview */}
+      <div className="p-3.5 rounded-2xl bg-[#0D1017] border border-white/[0.1] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="w-2 h-2 rounded-full bg-[#CEFF00] animate-pulse shrink-0" />
           <p className="text-xs text-white/90 truncate font-medium">{match.commentary}</p>
         </div>
-        <div className="text-[10px] font-mono text-white/40 shrink-0 hidden sm:block">
-          Shortcut: [A] & [L]
+        <div className="flex items-center gap-2 text-[10px] font-mono text-white/40 shrink-0 self-end sm:self-auto">
+          <span className="hidden md:inline">Preview:</span>
+          <button
+            type="button"
+            onClick={() => triggerFeedback('point', true)}
+            className="px-2 py-0.5 rounded bg-white/[0.04] hover:bg-[#CEFF00]/10 hover:text-[#CEFF00] text-white/60 transition-colors flex items-center gap-1 active:scale-95"
+            title="Preview light racquet point click and tactile haptic pulse"
+          >
+            <span>Shuttle Click</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => triggerFeedback('game', true)}
+            className="px-2 py-0.5 rounded bg-white/[0.04] hover:bg-[#CEFF00]/10 hover:text-[#CEFF00] text-white/60 transition-colors flex items-center gap-1 active:scale-95"
+            title="Preview celebratory game set fanfare and stadium cheer"
+          >
+            <Sparkles size={11} className="text-[#CEFF00]" />
+            <span>Stadium Cheer</span>
+          </button>
         </div>
       </div>
 
@@ -281,8 +340,9 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
       {/* Set Won Callout */}
       {match.setFinished && match.status !== 'completed' && (
         <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-950/40 via-[#0D1017] to-[#0A0C11] border border-emerald-500/40 text-center space-y-3 shadow-xl">
-          <div className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold">
-            Set {match.currentSet} Concluded
+          <div className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold flex items-center justify-center gap-1.5">
+            <Sparkles size={14} className="text-emerald-400 animate-spin" />
+            <span>Set {match.currentSet} Concluded</span>
           </div>
           <h2 className="text-xl font-display font-bold text-white">
             {match.setsA > match.setsB ? match.teamA.name : match.teamB.name} wins Set {match.currentSet}!
@@ -292,7 +352,10 @@ export const LiveScoreView: React.FC<LiveScoreViewProps> = ({
           </p>
 
           <button
-            onClick={onNextSet}
+            onClick={() => {
+              triggerFeedback('point', soundEnabled);
+              onNextSet();
+            }}
             className="px-6 py-3 rounded-xl bg-[#CEFF00] text-black font-semibold text-xs flex items-center justify-center gap-2 hover:bg-[#b8e000] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(206,255,0,0.2)] mx-auto"
           >
             <span>Proceed to Set {match.currentSet + 1}</span>
