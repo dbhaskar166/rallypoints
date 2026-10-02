@@ -13,6 +13,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('rallypoint-theme');
+          if (saved === 'light') {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            document.documentElement.style.colorScheme = 'light';
+          } else {
+            document.documentElement.classList.remove('light');
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body class="bg-[#08090C] text-[#E6EDF3] antialiased selection:bg-[#CEFF00] selection:text-black">
     <div id="root"></div>

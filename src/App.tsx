@@ -47,6 +47,7 @@ import { WalletView } from './components/WalletView';
 import { ProfileModal } from './components/ProfileModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { PhoneWhatsAppLoginModal } from './components/PhoneWhatsAppLoginModal';
+import { ThemeMode, getInitialTheme, toggleTheme, applyTheme } from './utils/theme';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -58,6 +59,16 @@ export default function App() {
   });
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [wallet, setWallet] = useState<UserWallet>({ balance: 0, transactions: [] });
+  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
+
+  // Synchronize theme with DOM root class
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme(prev => toggleTheme(prev));
+  };
 
   // Navigation state
   const [activeTab, setActiveTab] = useState<'dashboard' | 'tournaments' | 'bookings' | 'scoring' | 'wallet'>('dashboard');
@@ -786,6 +797,8 @@ export default function App() {
         }}
         profile={profile}
         wallet={wallet}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onOpenPhoneLogin={() => setIsPhoneLoginModalOpen(true)}
         liveMatchesCount={liveMatchesCount}

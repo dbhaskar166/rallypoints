@@ -1,12 +1,25 @@
 import React from 'react';
 import { UserProfile, UserWallet } from '../types';
-import { Trophy, CalendarDays, Activity, User, Zap, MessageCircle, ShieldCheck } from 'lucide-react';
+import { ThemeMode } from '../utils/theme';
+import {
+  Trophy,
+  CalendarDays,
+  Activity,
+  User,
+  Zap,
+  MessageCircle,
+  ShieldCheck,
+  Sun,
+  Moon,
+} from 'lucide-react';
 
 interface NavbarProps {
   activeTab: 'dashboard' | 'tournaments' | 'bookings' | 'scoring' | 'wallet';
   onSelectTab: (tab: 'dashboard' | 'tournaments' | 'bookings' | 'scoring' | 'wallet') => void;
   profile: UserProfile | null;
   wallet: UserWallet;
+  theme: ThemeMode;
+  onToggleTheme: () => void;
   onOpenProfile: () => void;
   onOpenPhoneLogin: () => void;
   liveMatchesCount: number;
@@ -23,6 +36,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   onSelectTab,
   profile,
+  theme,
+  onToggleTheme,
   onOpenProfile,
   onOpenPhoneLogin,
   liveMatchesCount,
@@ -41,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/[0.08] bg-[#08090C]/85 backdrop-blur-xl transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3 sm:gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2.5 sm:gap-4">
         {/* Zone 1: Brand Wordmark */}
         <div className="flex items-center gap-3 shrink-0">
           <button
@@ -93,12 +108,28 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
         </nav>
 
-        {/* Zone 3: WhatsApp Auth & Profile Controls */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Zone 3: Theme Toggle, WhatsApp Auth & Profile Controls */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Light / Dark Mode Toggle Button */}
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.2] text-white/70 hover:text-white flex items-center justify-center transition-all shadow-sm active:scale-95"
+            title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            aria-label={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+          >
+            {theme === 'dark' ? (
+              <Sun size={15} className="text-amber-300 hover:rotate-45 transition-transform" />
+            ) : (
+              <Moon size={15} className="text-indigo-600 hover:-rotate-12 transition-transform" />
+            )}
+          </button>
+
+          {/* WhatsApp Phone Status / CTA */}
           {profile?.phoneVerified && profile?.phone ? (
             <div
               onClick={onOpenProfile}
-              className="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] text-[11px] font-mono cursor-pointer hover:bg-[#25D366]/20 transition-colors"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] text-[11px] font-mono cursor-pointer hover:bg-[#25D366]/20 transition-colors"
               title="Verified WhatsApp Phone Number"
             >
               <MessageCircle size={13} className="shrink-0" />
@@ -118,6 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
+          {/* Profile Pill */}
           <button
             type="button"
             onClick={onOpenProfile}
